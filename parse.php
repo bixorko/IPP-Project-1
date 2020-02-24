@@ -105,7 +105,6 @@ function syntaxAnalyze($string, $xw)
         threeArgs($edited, $three_args, $xw);
     }
     else {
-        #TODO CHECK FOR RIGHT ERROR CODES
         exit(23);
     }
 }
@@ -123,7 +122,6 @@ function zeroArgs($string, $argsArZero, $xw)
 
     foreach($argsArZero as $a) {
         if (strcmp($string[0], $a) == 0) {
-            #TODO SET TO XML
             xmlwriter_start_element($xw, 'instruction');
             xmlwriter_start_attribute($xw, 'order');
             xmlwriter_text($xw, "$ordercount");
@@ -149,14 +147,12 @@ function zeroArgs($string, $argsArZero, $xw)
 
 function oneArgs($string, $argsArOne, $xw)
 {
-    #TODO CHECK FOR REGEX
     global $ordercount;
     $wastherematch = false;
 
 
     foreach($argsArOne as $a) {
         if (strtoupper($string[0]) == "DEFVAR") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
-            #TODO CHECK FOR REGEX
             if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)) {
                 //TU BUDE REGEX PRE DEFVAR LF TF GF @ xxx a takto pokracovat aj pre LABEL a vsetky ostatne veci... odkontrolovat a ideme dalej
                 helpForOneArgsXML($a, $xw, $string, 'var');
@@ -175,7 +171,6 @@ function oneArgs($string, $argsArOne, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
                 exit(23);
             }
         }
@@ -236,7 +231,7 @@ function oneArgs($string, $argsArOne, $xw)
         }
     }
     if (!$wastherematch) {
-        #TODO CHECK FOR RIGHT ERROR CODES
+
         exit(22);
     }
 }
@@ -650,7 +645,6 @@ function threeArgs($string, $argsArThree, $xw)
         }
     }
 
-    #TODO CHECK FOR RIGHT ERROR CODES
     exit(22);
 }
 
