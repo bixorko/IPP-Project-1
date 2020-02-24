@@ -30,8 +30,11 @@ elseif ($argc == 1){
 
     $firsttime = true;
     while($line = fgets(STDIN)){
+        if ($line[0] == "\n"){
+            continue;
+        }
         #ignore comments
-        if (preg_match('/(.*#)/', $line, $output_line)){
+        elseif (preg_match('/(.*#)/', $line, $output_line)){
             $updated = substr_replace($output_line[0],"\n",-1);
             #ignore empty lines
             if (strlen($updated) === 1){
@@ -42,9 +45,7 @@ elseif ($argc == 1){
                     if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $updated, $output_header)){
                         $firsttime = false;
                     }else{
-                        echo "FUCK THIS SHIT IM ENDING RIGHT NOW!\n";
-                        #TODO CHECK FOR RIGHT ERROR CODES
-                        exit(30);
+                        exit(21);
                     }
                 }else {
                     #XML
@@ -58,9 +59,7 @@ elseif ($argc == 1){
                 if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $line, $output_header)){
                     $firsttime = false;
                 }else{
-                    echo "FUCK THIS SHIT IM ENDING RIGHT NOW!\n";
-                    #TODO CHECK FOR RIGHT ERROR CODES
-                    exit(30);
+                    exit(21);
                 }
             }else {
                 #XML
@@ -107,7 +106,7 @@ function syntaxAnalyze($string, $xw)
     }
     else {
         #TODO CHECK FOR RIGHT ERROR CODES
-        exit(1);
+        exit(23);
     }
 }
 
@@ -138,8 +137,7 @@ function zeroArgs($string, $argsArZero, $xw)
         }
     }
     if (!$wastherematch) {
-        #TODO CHECK FOR RIGHT ERROR CODES
-        exit(1);
+        exit(22);
     }
 }
 
@@ -155,21 +153,18 @@ function oneArgs($string, $argsArOne, $xw)
     global $ordercount;
     $wastherematch = false;
 
-    #var REGEX: '/^\s(GF|LF|TF)@[a-zA-Z\-_$&%*!?]*\s*$/'
-    #Label REGEX: '/^[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/'
 
     foreach($argsArOne as $a) {
         if (strtoupper($string[0]) == "DEFVAR") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
             #TODO CHECK FOR REGEX
-            if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?]*\s*$/', $string[1], $output_array)) {
+            if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)) {
                 //TU BUDE REGEX PRE DEFVAR LF TF GF @ xxx a takto pokracovat aj pre LABEL a vsetky ostatne veci... odkontrolovat a ideme dalej
                 helpForOneArgsXML($a, $xw, $string, 'var');
                 $wastherematch = true;
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
 
@@ -181,29 +176,31 @@ function oneArgs($string, $argsArOne, $xw)
             }
             else{
                 #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
 
         else if (strtoupper($string[0]) == "WRITE") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+            //TODO WRIITE
             declareWhichXML($a, $xw, $string);
             $wastherematch = true;
             return;
+
         }
 
         elseif (strtoupper($string[0]) == "PUSHS") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+            //TODO PUSHS
             declareWhichXML($a, $xw, $string);
             $wastherematch = true;
             return;
         }
 
         elseif (strtoupper($string[0]) == "POPS") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
-            if (preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?]*\s*$/', $string[1], $output_array)){
+            if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                 helpForOneArgsXML($a, $xw, $string, 'var');
             }
             else {
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
             $wastherematch = true;
             return;
@@ -214,8 +211,7 @@ function oneArgs($string, $argsArOne, $xw)
                 helpForOneArgsXML($a, $xw, $string, 'label');
             }
             else {
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
             $wastherematch = true;
             return;
@@ -226,14 +222,14 @@ function oneArgs($string, $argsArOne, $xw)
                 helpForOneArgsXML($a, $xw, $string, 'var');
             }
             else {
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
             $wastherematch = true;
             return;
         }
 
         elseif (strtoupper($string[0]) == "DPRINT") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+            //TODO DPRINT
             declareWhichXML($a, $xw, $string);
             $wastherematch = true;
             return;
@@ -241,7 +237,7 @@ function oneArgs($string, $argsArOne, $xw)
     }
     if (!$wastherematch) {
         #TODO CHECK FOR RIGHT ERROR CODES
-        exit(1);
+        exit(22);
     }
 }
 
@@ -263,8 +259,7 @@ function declareWhichXML($a, $xw, $string)
         helpForOneArgsXML($a, $xw, $string, 'int');
     }
     else {
-        #TODO CHECK FOR RIGHT ERROR CODES
-        exit(50);
+        exit(23);
     }
 }
 
@@ -312,8 +307,7 @@ function declareWhichXML2($a, $xw, $string, $firsttype)
         helpForTwoArgsXML($a, $xw, $string, $firsttype, 'int');
     }
     else {
-        #TODO CHECK FOR RIGHT ERROR CODES
-        exit(50);
+        exit(23);
     }
 }
 
@@ -357,8 +351,7 @@ function twoArgs($string, $argsArTwo, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "INT2CHAR"){
@@ -368,8 +361,7 @@ function twoArgs($string, $argsArTwo, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "READ"){
@@ -379,8 +371,7 @@ function twoArgs($string, $argsArTwo, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "STRLEN"){
@@ -391,8 +382,7 @@ function twoArgs($string, $argsArTwo, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "TYPE"){
@@ -404,15 +394,13 @@ function twoArgs($string, $argsArTwo, $xw)
                 } elseif (preg_match('/^\s*int@[0-9]+\s*$/', $string[1], $output_array)) {
                     helpForTwoArgsXML($a, $xw, $string, 'var','int');
                 } else {
-                    #TODO CHECK FOR RIGHT ERROR CODES
-                    exit(50);
+                    exit(23);
                 }
                 $wastherematch = true;
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "NOT"){
@@ -423,17 +411,14 @@ function twoArgs($string, $argsArTwo, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
     }
 
     if (!$wastherematch) {
-        #TODO CHECK FOR RIGHT ERROR CODES
-        exit(1);
+        exit(22);
     }
-    #TODO CHECK FOR REGEX
 }
 
 #################################################
@@ -478,7 +463,6 @@ function helpForThreeArgsXML($a, $xw, $string, $whattype1, $whattype2, $whattype
 
 function threeArgs($string, $argsArThree, $xw)
 {
-    #TODO CHECK FOR REGEX
     global $ordercount;
     foreach($argsArThree as $a) {
         if ((strtoupper($string[0]) == "ADD" || strtoupper($string[0]) == "SUB" || strtoupper($string[0]) == "MUL" || strtoupper($string[0]) == "IDIV")) {
@@ -499,8 +483,7 @@ function threeArgs($string, $argsArThree, $xw)
                 return;
             }
             else {
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "LT" || strtoupper($string[0]) == "GT" || strtoupper($string[0]) == "EQ") {
@@ -512,29 +495,36 @@ function threeArgs($string, $argsArThree, $xw)
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
-                if (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
                     $secondtype = 'bool';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
                     $secondtype = 'string';
+                } else{
+                    exit(23);
                 }
+
                 if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
-                if (preg_match('/^\s*bool@(true|false)\s*$/', $string[3], $output_array)){
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*bool@/', '', $string[3]);
                     $thirdtype = 'bool';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*string@/', '', $string[3]);
                     $thirdtype = 'string';
+                }else{
+                    exit(23);
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
                 return;
+            }else{
+                exit(23);
             }
         }
         #TODO ESTE RAZ TOTO DOBRE POZRIET AJ NOT V TWOARGS
@@ -546,8 +536,7 @@ function threeArgs($string, $argsArThree, $xw)
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
         }
         elseif (strtoupper($string[0]) == "CONCAT") {
@@ -560,25 +549,29 @@ function threeArgs($string, $argsArThree, $xw)
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
                     $secondtype = 'string';
+                }else{
+                    exit(23);
                 }
+
                 if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*string@/', '', $string[3]);
                     $thirdtype = 'string';
+                }else{
+                    exit(23);
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
                 return;
             }
             else{
-                #TODO CHECK FOR RIGHT ERROR CODES
-                exit(50);
+                exit(23);
             }
 
         }
@@ -591,21 +584,27 @@ function threeArgs($string, $argsArThree, $xw)
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)) {
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)) {
                     $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
                     $secondtype = 'string';
+                }else{
+                    exit(23);
                 }
                 if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)) {
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)) {
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)) {
                     $string[3] = preg_replace('/^\s*string@/', '', $string[3]);
                     $thirdtype = 'string';
+                }else{
+                    exit(23);
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
                 return;
+            }else{
+                exit(23);
             }
         }
 
@@ -618,35 +617,41 @@ function threeArgs($string, $argsArThree, $xw)
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
-                if (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
                     $secondtype = 'bool';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
                     $secondtype = 'string';
+                }else{
+                    exit(23);
                 }
                 if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
-                if (preg_match('/^\s*bool@(true|false)\s*$/', $string[3], $output_array)){
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*bool@/', '', $string[3]);
                     $thirdtype = 'bool';
                 }
-                if (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*string@/', '', $string[3]);
                     $thirdtype = 'string';
+                } else{
+                    exit(23);
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
                 return;
+            }else{
+                exit(23);
             }
         }
     }
 
     #TODO CHECK FOR RIGHT ERROR CODES
-    exit(1);
+    exit(22);
 }
 
 #################################################
