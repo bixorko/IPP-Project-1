@@ -4,5 +4,6 @@ CREATEFRAME # příklad instrukce bez operandů, v XML možný zápis delším z
 DEFVAR TF@x
 PUSHFRAME
 CREATEFRAME
+ADD LF@a string@ahoj bool@true
 WRITE TF@x
 POPFRAME # tato instrukce bude pro ilustraci ve výstupním XML zapsána kratším způsobem
