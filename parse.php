@@ -301,7 +301,7 @@ function declareWhichXML($a, $xw, $string)
         $string[1] = preg_replace('/^\s*bool@/', '', $string[1]);
         helpForOneArgsXML($a, $xw, $string, 'bool');
     }
-    elseif (preg_match('/^\s*int@[0-9]+\s*$/', $string[1], $output_array)){
+    elseif (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[1], $output_array)){
         $string[1] = preg_replace('/^\s*int@/', '', $string[1]);
         helpForOneArgsXML($a, $xw, $string, 'int');
     }
@@ -354,7 +354,7 @@ function declareWhichXML2($a, $xw, $string, $firsttype)
         $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
         helpForTwoArgsXML($a, $xw, $string, $firsttype, 'bool');
     }
-    elseif (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+    elseif (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
         $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
         helpForTwoArgsXML($a, $xw, $string, $firsttype, 'int');
     }
@@ -456,10 +456,10 @@ function twoArgs($string, $argsArTwo, $xw)
                     helpForTwoArgsXML($a, $xw, $string, 'var','string');
                 } elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[1], $output_array)) {
                     helpForTwoArgsXML($a, $xw, $string, 'var','bool');
-                } elseif (preg_match('/^\s*int@[0-9]+\s*$/', $string[1], $output_array)) {
+                } elseif (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[1], $output_array)) {
                     helpForTwoArgsXML($a, $xw, $string, 'var','int');
                 } elseif(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
-                    helpForTwoArgsXML($a, $xw, $string, 'var','int');
+                    helpForTwoArgsXML($a, $xw, $string, 'var','var');
                 } else {
                     exit(23);
                 }
@@ -472,8 +472,22 @@ function twoArgs($string, $argsArTwo, $xw)
         }
         elseif (strtoupper($string[0]) == "NOT"){
             if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
-                $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
-                helpForTwoArgsXML($a, $xw, $string, 'var','bool');
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','int');
+                }
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','bool');
+                }
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','string');
+                }
+                elseif (preg_match('/^\s*nil@\S*\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*nil@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'nil','nil');
+                }
                 $wastherematch = true;
                 return;
             }
@@ -545,7 +559,7 @@ function threeArgs($string, $argsArThree, $xw)
                 $firsttype = 'var';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -562,7 +576,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -576,7 +590,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
@@ -590,7 +604,7 @@ function threeArgs($string, $argsArThree, $xw)
                 $firsttype = 'var';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -607,7 +621,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -621,7 +635,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
@@ -636,7 +650,7 @@ function threeArgs($string, $argsArThree, $xw)
                 $firsttype = 'var';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -653,7 +667,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -667,7 +681,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
@@ -681,7 +695,7 @@ function threeArgs($string, $argsArThree, $xw)
                 $firsttype = 'var';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -698,7 +712,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -712,7 +726,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
                 return;
@@ -726,7 +740,7 @@ function threeArgs($string, $argsArThree, $xw)
                 $firsttype = 'var';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -743,7 +757,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -757,7 +771,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
@@ -769,10 +783,10 @@ function threeArgs($string, $argsArThree, $xw)
 
         elseif (strtoupper($string[0]) == "JUMPIFEQ" || strtoupper($string[0]) == "JUMPIFNEQ") {
             if (preg_match('/^\s*[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array1) && preg_match($symbol_regex, $string[2], $output_array2) && preg_match($symbol_regex, $string[3], $output_array3)) {
-                $firsttype = 'var';
+                $firsttype = 'label';
                 $secondtype = 'var';
                 $thirdtype = 'var';
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[2], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     $secondtype = 'int';
                 }
@@ -789,7 +803,7 @@ function threeArgs($string, $argsArThree, $xw)
                     $secondtype = 'nil';
                 }
 
-                if (preg_match('/^\s*int@[0-9]+\s*$/', $string[3], $output_array)){
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*int@/', '', $string[3]);
                     $thirdtype = 'int';
                 }
@@ -803,7 +817,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $secondtype = 'nil';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
