@@ -618,7 +618,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $thirdtype = 'ni l';
+                    $thirdtype = 'nil';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
