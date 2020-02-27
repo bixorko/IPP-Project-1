@@ -18,7 +18,7 @@ if ($argc == 2) {
 }
 
 elseif ($argc == 1){
-    $symbol_regex = '/^\s*((GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?])|(nil@nil)|(int@[+|-]?[0-9]+)|(bool@(true|false))|(string@\S*)\s*$/';
+    $symbol_regex = '/^\s*((GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*)|(nil@nil)|(int@[+|-]?[0-9]+)|(bool@(true|false))|(string@\S*)\s*$/';
     $xw = xmlwriter_open_memory();
     xmlwriter_set_indent($xw, "  ");
     $res = xmlwriter_set_indent_string($xw, "  ");
@@ -31,7 +31,7 @@ elseif ($argc == 1){
     xmlwriter_start_document($xw, '1.0', 'UTF-8');
     xmlwriter_start_element($xw, 'program');
     xmlwriter_start_attribute($xw, 'language');
-    xmlwriter_text($xw, 'IPPcode19');
+    xmlwriter_text($xw, 'IPPcode20');
     xmlwriter_end_attribute($xw);
 
     $firsttime = true;
@@ -52,7 +52,7 @@ elseif ($argc == 1){
             }
             else{
                 if($firsttime){
-                    if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(1)(9)\s*$/', $updated, $output_header)){
+                    if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $updated, $output_header)){
                         $firsttime = false;
                     }else{
                         exit(21);
@@ -66,7 +66,7 @@ elseif ($argc == 1){
         #XML
         else {
             if($firsttime){
-                if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(1)(9)\s*$/', $line, $output_header)){
+                if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $line, $output_header)){
                     $firsttime = false;
                 }else{
                     exit(21);
@@ -158,13 +158,13 @@ function zeroArgs($string, $argsArZero, $xw)
     checkIfBadCountArgs($string, $one_args, $two_args, $three_args);
 
     foreach($argsArZero as $a) {
-        if (strcmp($string[0], $a) == 0) {
+        if (strcmp(strtoupper($string[0]), $a) == 0) {
             xmlwriter_start_element($xw, 'instruction');
             xmlwriter_start_attribute($xw, 'order');
             xmlwriter_text($xw, "$ordercount");
             xmlwriter_end_attribute($xw);
             xmlwriter_start_attribute($xw, 'opcode');
-            xmlwriter_text($xw, "$string[0]");
+            xmlwriter_text($xw, strtoupper($string[0]));
             xmlwriter_end_attribute($xw);
             xmlwriter_end_element($xw);
             $ordercount += 1;
@@ -264,7 +264,29 @@ function oneArgs($string, $argsArOne, $xw)
 
         elseif (strtoupper($string[0]) == "EXIT") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
             if (preg_match($symbol_regex, $string[1], $output_array)){
-                helpForOneArgsXML($a, $xw, $string, 'var');
+                if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
+                    helpForOneArgsXML($a, $xw, $string, 'var');
+                }
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[1], $output_array)){
+                    $string[1] = preg_replace('/^\s*string@/', '', $string[1]);
+                    helpForOneArgsXML($a, $xw, $string, 'string');
+                }
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[1], $output_array)){
+                    $string[1] = preg_replace('/^\s*bool@/', '', $string[1]);
+                    helpForOneArgsXML($a, $xw, $string, 'bool');
+                }
+                elseif (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[1], $output_array)){
+                    $string[1] = preg_replace('/^\s*int@/', '', $string[1]);
+                    helpForOneArgsXML($a, $xw, $string, 'int');
+                }
+                elseif (preg_match('/^\s*nil@nil\s*$/', $string[1], $output_array)){
+                    $string[1] = preg_replace('/^\s*nil@/', '', $string[1]);
+                    helpForOneArgsXML($a, $xw, $string, 'nil');
+                }
+
+                else {
+                    exit(23);
+                }
             }
             else {
                 exit(23);
@@ -290,6 +312,7 @@ function oneArgs($string, $argsArOne, $xw)
 
 function declareWhichXML($a, $xw, $string)
 {
+
     if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
         helpForOneArgsXML($a, $xw, $string, 'var');
     }
@@ -305,7 +328,7 @@ function declareWhichXML($a, $xw, $string)
         $string[1] = preg_replace('/^\s*int@/', '', $string[1]);
         helpForOneArgsXML($a, $xw, $string, 'int');
     }
-    elseif (preg_match('/^\snil@nil\s*$/', $string[1], $output_array)){
+    elseif (preg_match('/^\s*nil@nil\s*$/', $string[1], $output_array)){
         $string[1] = preg_replace('/^\s*nil@/', '', $string[1]);
         helpForOneArgsXML($a, $xw, $string, 'nil');
     }
@@ -323,7 +346,7 @@ function helpForOneArgsXML($a, $xw, $string, $whattype)
     xmlwriter_text($xw, "$ordercount");
     xmlwriter_end_attribute($xw);
     xmlwriter_start_attribute($xw, 'opcode');
-    xmlwriter_text($xw, "$string[0]");
+    xmlwriter_text($xw, strtoupper($string[0]));
     xmlwriter_start_element($xw, 'arg1');
     xmlwriter_start_attribute($xw, 'type');
     xmlwriter_text($xw, $whattype);
@@ -375,7 +398,7 @@ function helpForTwoArgsXML($a, $xw, $string, $whattype1, $whattype2)
     xmlwriter_text($xw, "$ordercount");
     xmlwriter_end_attribute($xw);
     xmlwriter_start_attribute($xw, 'opcode');
-    xmlwriter_text($xw, "$string[0]");
+    xmlwriter_text($xw, strtoupper($string[0]));
     xmlwriter_start_element($xw, 'arg1');
     xmlwriter_start_attribute($xw, 'type');
     xmlwriter_text($xw, $whattype1);
@@ -488,6 +511,11 @@ function twoArgs($string, $argsArTwo, $xw)
                     $string[2] = preg_replace('/^\s*nil@/', '', $string[2]);
                     helpForTwoArgsXML($a, $xw, $string, 'nil','nil');
                 }
+                elseif(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
+                    helpForTwoArgsXML($a, $xw, $string, 'var','var');
+                } else {
+                    exit(23);
+                }
                 $wastherematch = true;
                 return;
             }
@@ -516,7 +544,7 @@ function helpForThreeArgsXML($a, $xw, $string, $whattype1, $whattype2, $whattype
     xmlwriter_text($xw, "$ordercount");
     xmlwriter_end_attribute($xw);
     xmlwriter_start_attribute($xw, 'opcode');
-    xmlwriter_text($xw, "$string[0]");
+    xmlwriter_text($xw, strtoupper($string[0]));
     xmlwriter_start_element($xw, 'arg1');
     xmlwriter_start_attribute($xw, 'type');
     xmlwriter_text($xw, $whattype1);
@@ -590,7 +618,7 @@ function threeArgs($string, $argsArThree, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[3], $output_array)){
                     $string[3] = preg_replace('/^\s*nil@/', '', $string[3]);
-                    $thirdtype = 'nil';
+                    $thirdtype = 'ni l';
                 }
 
                 helpForThreeArgsXML($a, $xw, $string, $firsttype, $secondtype, $thirdtype);
