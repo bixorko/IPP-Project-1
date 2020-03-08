@@ -432,7 +432,7 @@ function twoArgs($string, $argsArTwo, $xw)
     foreach($argsArTwo as $a) {
 
         if (strtoupper($string[0]) == "MOVE"){
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
                 declareWhichXML2($a, $xw, $string, 'var');
                 $wastherematch = true;
                 return;
@@ -442,7 +442,7 @@ function twoArgs($string, $argsArTwo, $xw)
             }
         }
         elseif (strtoupper($string[0]) == "INT2CHAR"){
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
 
                 declareWhichXML2($a, $xw, $string, 'var');
                 $wastherematch = true;
@@ -453,7 +453,7 @@ function twoArgs($string, $argsArTwo, $xw)
             }
         }
         elseif (strtoupper($string[0]) == "READ"){
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match('/^\s*(int|bool|string)\s*$/',$string[2],$output_array)) {
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match('/^\s*(int|bool|string)\s*$/',$string[2],$output_array)) {
                 helpForTwoArgsXML($a, $xw, $string, 'var', 'type');
                 $wastherematch = true;
                 return;
@@ -464,7 +464,7 @@ function twoArgs($string, $argsArTwo, $xw)
         }
         elseif (strtoupper($string[0]) == "STRLEN"){
             #TODO DRUHY ARGUMENT ESTE
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
                 declareWhichXML2($a, $xw, $string, 'var');
                 $wastherematch = true;
                 return;
@@ -474,27 +474,7 @@ function twoArgs($string, $argsArTwo, $xw)
             }
         }
         elseif (strtoupper($string[0]) == "TYPE"){
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
-                if (preg_match('/^\s*string@\S*\s*$/', $string[1], $output_array)) {
-                    helpForTwoArgsXML($a, $xw, $string, 'var','string');
-                } elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[1], $output_array)) {
-                    helpForTwoArgsXML($a, $xw, $string, 'var','bool');
-                } elseif (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[1], $output_array)) {
-                    helpForTwoArgsXML($a, $xw, $string, 'var','int');
-                } elseif(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
-                    helpForTwoArgsXML($a, $xw, $string, 'var','var');
-                } else {
-                    exit(23);
-                }
-                $wastherematch = true;
-                return;
-            }
-            else{
-                exit(23);
-            }
-        }
-        elseif (strtoupper($string[0]) == "NOT"){
-            if(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
                 if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
                     helpForTwoArgsXML($a, $xw, $string, 'var','int');
@@ -509,9 +489,39 @@ function twoArgs($string, $argsArTwo, $xw)
                 }
                 elseif (preg_match('/^\s*nil@\S*\s*$/', $string[2], $output_array)){
                     $string[2] = preg_replace('/^\s*nil@/', '', $string[2]);
-                    helpForTwoArgsXML($a, $xw, $string, 'nil','nil');
+                    helpForTwoArgsXML($a, $xw, $string, 'var','nil');
                 }
-                elseif(preg_match('/^(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
+                elseif(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
+                    helpForTwoArgsXML($a, $xw, $string, 'var','var');
+                } else {
+                    exit(23);
+                }
+                $wastherematch = true;
+                return;
+            }
+            else{
+                exit(23);
+            }
+        }
+        elseif (strtoupper($string[0]) == "NOT"){
+            if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
+                if (preg_match('/^\s*int@[+|-]?[0-9]+\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*int@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','int');
+                }
+                elseif (preg_match('/^\s*bool@(true|false)\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*bool@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','bool');
+                }
+                elseif (preg_match('/^\s*string@\S*\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*string@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','string');
+                }
+                elseif (preg_match('/^\s*nil@\S*\s*$/', $string[2], $output_array)){
+                    $string[2] = preg_replace('/^\s*nil@/', '', $string[2]);
+                    helpForTwoArgsXML($a, $xw, $string, 'var','nil');
+                }
+                elseif(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                     helpForTwoArgsXML($a, $xw, $string, 'var','var');
                 } else {
                     exit(23);
@@ -672,7 +682,7 @@ function threeArgs($string, $argsArThree, $xw)
                 exit(23);
             }
         }
-        #TODO ESTE RAZ TOTO DOBRE POZRIET AJ NOT V TWOARGS
+        #TODO ESTE RAZ TOTO DOBRE POZRIET AJ TT V TWOARGS
         elseif (strtoupper($string[0]) == "AND" || strtoupper($string[0]) == "OR") {
             if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array1) && preg_match($symbol_regex, $string[2], $output_array2) && preg_match($symbol_regex, $string[3], $output_array3)) {
                 $firsttype = 'var';
@@ -882,5 +892,3 @@ function printHelp()
     echo "23 - Ina lexikalna alebo syntakticka chyba v zdrojovom kode\n";
     exit(0);
 }
-
-#TODO FIX REGEX PRE LABEL V JUMP, JUMPIFEQ a vsetky tam kde sa jumpuje na LABEL REGEX no
