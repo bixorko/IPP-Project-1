@@ -93,7 +93,6 @@ else{
 
 function syntaxAnalyze($string, $xw)
 {
-    #TODO ODKONTROLOVAT NAZVY FUNKKCII
     $string = ltrim($string);
     $removedws = preg_split('/\s+/', $string);
     $backtostring = implode(" ", $removedws);
@@ -219,7 +218,6 @@ function oneArgs($string, $argsArOne, $xw)
         }
 
         else if (strtoupper($string[0]) == "WRITE") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
-            //TODO WRIITE
             if(preg_match($symbol_regex, $string[1], $output_array)) {
                 declareWhichXML($a, $xw, $string);
                 $wastherematch = true;
@@ -230,7 +228,6 @@ function oneArgs($string, $argsArOne, $xw)
         }
 
         elseif (strtoupper($string[0]) == "PUSHS") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
-            //TODO PUSHS
             if(preg_match($symbol_regex, $string[1], $output_array)) {
                 declareWhichXML($a, $xw, $string);
                 $wastherematch = true;
@@ -463,7 +460,6 @@ function twoArgs($string, $argsArTwo, $xw)
             }
         }
         elseif (strtoupper($string[0]) == "STRLEN"){
-            #TODO DRUHY ARGUMENT ESTE
             if(preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array) && preg_match($symbol_regex,$string[2],$output_array)) {
                 declareWhichXML2($a, $xw, $string, 'var');
                 $wastherematch = true;
@@ -682,7 +678,6 @@ function threeArgs($string, $argsArThree, $xw)
                 exit(23);
             }
         }
-        #TODO ESTE RAZ TOTO DOBRE POZRIET AJ TT V TWOARGS
         elseif (strtoupper($string[0]) == "AND" || strtoupper($string[0]) == "OR") {
             if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array1) && preg_match($symbol_regex, $string[2], $output_array2) && preg_match($symbol_regex, $string[3], $output_array3)) {
                 $firsttype = 'var';
