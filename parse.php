@@ -7,17 +7,54 @@
 #################################################
 
 $ordercount = 1;
+$comments = 0;
+$labels = 0;
+$jumps = 0;
+$cliarguments = array("--loc", "--comments", "--labels", "--jumps");
+$filename = '';
+$rozsirenia = false;
 
-if ($argc == 2) {
-    #TODO ROZSIRENIE STATISTIKY
-    if (strcmp($argv[1], '--help') == 0) {
-        printHelp();
-    } else {
-        exit(10);
+if ($argc != 1) {
+    #1 argument
+    if ($argc == 2) {
+        if (strcmp($argv[1], '--help') == 0) {
+            printHelp();
+        } elseif (preg_match('/^--stats=\S+$/', $argv[1], $patternmatch)) {
+            $filename = explode('=', $argv[1])[1];
+            $statsfile = fopen($filename, "w");
+            fclose($statsfile);
+        } else {
+            exit(10);
+        }
+    } #2 a viac argumentov
+    else {
+        $first = true;
+        $rozsirenia = true;
+        $isstats = 0;
+        $givenargs = array();
+        foreach ($argv as $arg) {
+            if ($first){
+                $first = false;
+            }
+            elseif (preg_match('/^--stats=\S+$/', $arg, $patternmatch)) {
+                $isstats += 1;
+                $filename = explode('=', $arg)[1];
+            }
+            elseif (in_array($arg, $cliarguments)) {
+                array_push($givenargs, $arg);
+            }
+            else{
+                #ZLE ZADANY ARGUEMNT NEROZPOZNANY
+                exit(10);
+            }
+        }
+        # VIACKRAT ZADANE STATS s FILOM
+        if ($isstats != 1){
+            exit(10);
+        }
     }
 }
 
-elseif ($argc == 1){
     $symbol_regex = '/^\s*((GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*)|(nil@nil)|(int@[+|-]?[0-9]+)|(bool@(true|false))|(string@\S*)\s*$/';
     $xw = xmlwriter_open_memory();
     xmlwriter_set_indent($xw, "  ");
@@ -45,6 +82,7 @@ elseif ($argc == 1){
         }
         #ignore comments
         elseif (preg_match('/(.*#)/', $line, $output_line)){
+            $comments += 1;
             $updated = substr_replace($output_line[0],"\n",-1);
             #ignore empty lines
             if (strlen($updated) === 1){
@@ -77,13 +115,32 @@ elseif ($argc == 1){
             }
         }
     }
+
+    if ($rozsirenia){
+        $statsfile = fopen($filename, "w");
+        foreach ($givenargs as $stat){
+            if ($stat == '--loc'){
+                fwrite($statsfile,$ordercount-1);
+                fwrite($statsfile,"\n");
+            }
+            elseif ($stat == '--comments'){
+                fwrite($statsfile,$comments);
+                fwrite($statsfile,"\n");
+            }
+            elseif ($stat == '--labels'){
+                fwrite($statsfile,$labels);
+                fwrite($statsfile,"\n");
+            }
+            elseif ($stat == '--jumps'){
+                fwrite($statsfile,$jumps);
+                fwrite($statsfile,"\n");
+            }
+        }
+        fclose($statsfile);
+    }
+
     xmlwriter_end_element($xw);
     echo xmlwriter_output_memory($xw);
-}
-
-else{
-    exit(10);
-}
 
 #################################################
 #                                               #
@@ -184,6 +241,7 @@ function zeroArgs($string, $argsArZero, $xw)
 function oneArgs($string, $argsArOne, $xw)
 {
     global $ordercount;
+    global $labels, $jumps;
     $wastherematch = false;
     global $symbol_regex;
 
@@ -207,6 +265,11 @@ function oneArgs($string, $argsArOne, $xw)
         }
 
         elseif (strtoupper($string[0]) == "LABEL" || strtoupper($a) == "CALL") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+            if (strtoupper($string[0]) == "LABEL"){
+                $labels += 1;
+            }else{
+                $jumps += 1;
+            }
             if(preg_match('/^[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)) {
                 helpForOneArgsXML($a, $xw, $string, 'label');
                 $wastherematch = true;
@@ -249,6 +312,7 @@ function oneArgs($string, $argsArOne, $xw)
         }
 
         elseif (strtoupper($string[0]) == "JUMP") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+            $jumps += 1;
             if (preg_match('/^\s*[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                 helpForOneArgsXML($a, $xw, $string, 'label');
             }
@@ -581,6 +645,7 @@ function threeArgs($string, $argsArThree, $xw)
     global $ordercount;
     global $symbol_regex;
 
+    global $jumps;
     global $zero_args;
     global $one_args;
     global $two_args;
@@ -815,6 +880,7 @@ function threeArgs($string, $argsArThree, $xw)
         }
 
         elseif (strtoupper($string[0]) == "JUMPIFEQ" || strtoupper($string[0]) == "JUMPIFNEQ") {
+            $jumps += 1;
             if (preg_match('/^\s*[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array1) && preg_match($symbol_regex, $string[2], $output_array2) && preg_match($symbol_regex, $string[3], $output_array3)) {
                 $firsttype = 'label';
                 $secondtype = 'var';
