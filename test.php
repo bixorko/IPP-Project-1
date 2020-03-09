@@ -1,6 +1,7 @@
 <?php
 
-$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+#$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+$jexamxml = './jexamxml/jexamxml.jar';
 $parsepath = './parse.php';
 $intpath = './interpret.py';
 $directorypath = './';
@@ -8,7 +9,12 @@ $recursive = false;
 $parseonly = false;
 $intonly = false;
 
-
+isValidArgs();
+if (!file_exists($parsepath) or !file_exists($intpath) or !file_exists($directorypath) or !file_exists($jexamxml)){
+    fwrite(STDERR, "Zle zadane cesty v parametroch!\n");
+    #TODO CHECK FOR DOBRY ERROR CODE KED CHYBA PARSE.PHP ALEBO INTERPRET.PY
+    exit(11);
+}
 
 function isValidArgs()
 {
@@ -19,6 +25,8 @@ function isValidArgs()
     global $argc;
     global $argv;
     global $recursive, $parseonly, $intonly;
+
+    $counters = array(0,0,0,0,0,0,0);
 
     $parsepathbool = false;
     $intpathbool = false;
@@ -33,29 +41,40 @@ function isValidArgs()
         }
     }
 
+    $first = true;
     foreach($argv as $arg){
-        if ("--recursive" == $arg){
+        if ($first){
+            $first = false;
+        }
+        elseif ("--recursive" == $arg){
+            $counters[0] += 1;
             $recursive = true;
         }
         elseif ("--parse-only" == $arg){
+            $counters[1] += 1;
             $parseonly = true;
         }
         elseif ("--int-only" == $arg){
+            $counters[2] += 1;
             $intonly = true;
         }
         elseif (preg_match('/^--parse-script=\S+$/', $arg, $patternmatch)){
-            $parsepath = explode('=', $argv[1])[1];
+            $counters[3] += 1;
+            $parsepath = explode('=', $arg)[1];
             $parsepathbool = true;
         }
         elseif (preg_match('/^--int-script=\S+$/', $arg, $patternmatch)){
-            $intpath = explode('=', $argv[1])[1];
+            $counters[4] += 1;
+            $intpath = explode('=', $arg)[1];
             $intpathbool = true;
         }
         elseif (preg_match('/^--directory=\S+$/', $arg, $patternmatch)){
-            $directorypath = explode('=', $argv[1])[1];
+            $counters[5] += 1;
+            $directorypath = explode('=', $arg)[1];
         }
         elseif (preg_match('/^--jexamxml=\S+$/', $arg, $patternmatch)){
-            $jexamxml = explode('=', $argv[1])[1];
+            $counters[6] += 1;
+            $jexamxml = explode('=', $arg)[1];
         }
         else{
             #TODO ERROR CODE PRE NEZNAMY ARGUMENT
@@ -63,7 +82,14 @@ function isValidArgs()
         }
     }
 
+    if(max($counters) > 1) {
+        fwrite(STDERR, "Argument bol zadany viac ako 1!\n");
+        #TODO ERROR CODE PRE VELA ARUGMENTOV
+        exit(10);
+    }
+
     if (($parseonly and ($intonly or $intpathbool)) or ($intonly and ($parseonly or $parsepathbool))){
+        fwrite(STDERR, "--parse a --int argumenty sa nesmu kombinovat!\n");
         #TODO CHECK FOR RIGHT ERROR CODE
         exit(10);
     }
