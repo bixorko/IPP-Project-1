@@ -207,6 +207,7 @@ function zeroArgs($string, $argsArZero, $xw)
     global $ordercount;
     $wastherematch = false;
 
+    global $jumps;
     global $zero_args;
     global $one_args;
     global $two_args;
@@ -215,6 +216,9 @@ function zeroArgs($string, $argsArZero, $xw)
 
     foreach($argsArZero as $a) {
         if (strcmp(strtoupper($string[0]), $a) == 0) {
+            if (strcmp(strtoupper($string[0]), "RETURN") == 0){
+                $jumps += 1;
+            }
             xmlwriter_start_element($xw, 'instruction');
             xmlwriter_start_attribute($xw, 'order');
             xmlwriter_text($xw, "$ordercount");
