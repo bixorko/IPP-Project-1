@@ -1,6 +1,8 @@
 <?php
 #$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+#$jexamxmloptions = '/pub/courses/ipp/jexamxml/options';
 $jexamxml = './jexamxml/jexamxml.jar';
+$jexamxmloptions = './jexamxml/options';
 $parsepath = './parse.php';
 $intpath = './interpret.py';
 $directorypath = './';
@@ -118,28 +120,40 @@ function both($rcVal, $nameoftest)
 
     exec("php $parsepath <$nameoftest.src >./$nameoftest.tmpfileforxmlcheck", $output, $returnPHP);
     exec("python3 $intpath --source=./$nameoftest.tmpfileforxmlcheck --input=$nameoftest.in >./$nameoftest.tmpfileforretcheck", $output, $returnINT);
-
     if ($returnINT == $rcVal){
         if ($returnINT == 0){
             exec("diff -w $nameoftest.out ./$nameoftest.tmpfileforretcheck", $output, $returnDIFF);
             if ($returnDIFF == 0) {
                 $tested += 1;
                 $passed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
+                removeTmpFiles("./$nameoftest.tmpfileforretcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
             }
             else {
                 $tested += 1;
                 $failed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
+                removeTmpFiles("./$nameoftest.tmpfileforretcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
             }
         }
         $tested += 1;
         $passed += 1;
+        removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
+        removeTmpFiles("./$nameoftest.tmpfileforretcheck");
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
     }
     $tested += 1;
     $failed += 1;
+    removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
+    removeTmpFiles("./$nameoftest.tmpfileforretcheck");
     return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
+}
+
+function removeTmpFiles($dir)
+{
+    unlink($dir);
 }
 
 function intOnly($rcVal, $nameoftest)
@@ -155,20 +169,24 @@ function intOnly($rcVal, $nameoftest)
             if ($returnDIFF == 0) {
                 $tested += 1;
                 $passed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforretcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
             }
             else {
                 $tested += 1;
                 $failed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforretcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
             }
         }
         $tested += 1;
         $passed += 1;
+        removeTmpFiles("./$nameoftest.tmpfileforretcheck");
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
     }
     $tested += 1;
     $failed += 1;
+    removeTmpFiles("./$nameoftest.tmpfileforretcheck");
     return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
 }
 
@@ -176,30 +194,35 @@ function parsesOnly($rcVal, $nameoftest)
 {
     global $parsepath;
     global $jexamxml;
+    global $jexamxmloptions;
 
     global $passed, $failed, $tested;
 
     exec("php $parsepath <$nameoftest.src >./$nameoftest.tmpfileforxmlcheck", $output, $returned);
     if ($rcVal == $returned){
         if ($rcVal == 0) {
-            exec("java -jar $jexamxml $nameoftest.out ./$nameoftest.tmpfileforxmlcheck diffs.xml /D jexamxml/options", $output, $returnXML);
+            exec("java -jar $jexamxml $nameoftest.out ./$nameoftest.tmpfileforxmlcheck diffs.xml /D $jexamxmloptions", $output, $returnXML);
             if ($returnXML == 0) {
                 $tested += 1;
                 $passed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
             }
             else{
                 $tested += 1;
                 $failed += 1;
+                removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">JEXAMXML: FAILED</td></tr></tbody></table>";
             }
         }
         $tested += 1;
         $passed += 1;
+        removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
     }
     $tested += 1;
     $failed += 1;
+    removeTmpFiles("./$nameoftest.tmpfileforxmlcheck");
     return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">JEXAMXML: FAILED</td></tr></tbody></table>";
 }
 
