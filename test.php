@@ -22,9 +22,8 @@ if (!file_exists($parsepath) or !file_exists($intpath) or !file_exists($director
 
 $generate = findFilesSrc($directorypath, $recursive);
 
-function getPaths()
+function getPaths($directorypath)
 {
-    global $directorypath;
     $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorypath));
 
     $files = array();
@@ -35,8 +34,7 @@ function getPaths()
             continue;
         }
 
-        $files[] = $file->getPathname();
-
+        array_push($files, $file->getPathname());
     }
 
     return $files;
@@ -45,37 +43,31 @@ function getPaths()
 function findFilesSrc($directorypath, $recursive)
 {
     global $html;
+    global $parseonly;
+    global $intonly;
+
     $srcarray = array();
+
     if ($recursive) {
-        $it = new RecursiveDirectoryIterator($directorypath);
-        foreach (new RecursiveIteratorIterator($it) as $file) {
-            if (is_dir($file)) {
-                $files1 = scandir($file);
-                $firsttime = true;
-                foreach ($files1 as $findsrc) {
-                    if (is_dir($findsrc)){
-                        if ($findsrc == 'atest') {
-                            if(in_array("atest", $files1)){
-                                echo "TRUE";
-                            }
-                        }
-                    }
-                    if (preg_match('/^.+\.src$/', $findsrc, $matchsrc)) {
-                        if ($firsttime){
-                            echo "<b>TESTED FOLDER: $directorypath </b>";
-                            $firsttime = false;
-                        }
-                        if (in_array($findsrc, $srcarray)){
-                            continue;
-                        }
-                        array_push($srcarray, $findsrc);
-                        $nameoftest = explode(".src", $findsrc, 2)[0];
-                        $rc = checkIfRcExists($nameoftest, $files1, $file, 'rc', '0');
-                        $in = checkIfRcExists($nameoftest, $files1, $file, 'in', '');
-                        $out = checkIfRcExists($nameoftest, $files1, $file, 'out', '');
-                        $rcVal = fgets(fopen($rc, 'r'));
-                        $html .= parsesOnly($rcVal, "$file/$nameoftest");
-                    }
+        $filefnc = getPaths($directorypath);
+        foreach ($filefnc as $file) {
+            if (preg_match('/.*\.src$/', $file, $matchsrc)) {
+                $findsrc = substr(strrchr($file, "/"), 1);
+                if (in_array($file, $srcarray)) {
+                    continue;
+                }
+                $filepath = substr($file, 0, strrpos( $file, '/') );
+                array_push($srcarray, $findsrc);
+                $nameoftest = explode(".src", $findsrc, 2)[0];
+                $rc = checkIfRcExists($nameoftest,  $filepath, 'rc', '0');
+                $in = checkIfRcExists($nameoftest,  $filepath, 'in', '');
+                $out = checkIfRcExists($nameoftest, $filepath, 'out', '');
+                $rcVal = fgets(fopen($rc, 'r'));
+                if ($parseonly) {
+                    $html .= parsesOnly($rcVal, "$filepath/$nameoftest");
+                }
+                elseif ($intonly){
+                    $html .= intOnly($rcVal, "$filepath/$nameoftest");
                 }
             }
         }
@@ -85,26 +77,45 @@ function findFilesSrc($directorypath, $recursive)
     else{
         if(is_dir($directorypath)){
             $files = scandir($directorypath);
-            $firsttime = true;
             foreach ($files as $findsrc) {
                 if (preg_match('/^.+\.src$/', $findsrc, $matchsrc)) {
-                    if ($firsttime){
-                        echo "<b>TESTED FOLDER: $directorypath</b>";
-                        $firsttime = false;
-                    }
                     array_push($srcarray, $findsrc);
                     $nameoftest = explode(".src", $findsrc, 2)[0];
-                    $rc = checkIfRcExists($nameoftest, $files, $directorypath, 'rc', '0');
-                    $in = checkIfRcExists($nameoftest, $files, $directorypath, 'in', '');
-                    $out = checkIfRcExists($nameoftest, $files, $directorypath, 'out', '');
+                    $rc = checkIfRcExists($nameoftest,  $directorypath, 'rc', '0');
+                    $in = checkIfRcExists($nameoftest, $directorypath, 'in', '');
+                    $out = checkIfRcExists($nameoftest, $directorypath, 'out', '');
                     $rcVal = fgets(fopen($rc, 'r'));
-                    $html .= parsesOnly($rcVal, "$directorypath/$nameoftest");
+                    if ($parseonly) {
+                        $html .= parsesOnly($rcVal, "$directorypath/$nameoftest");
+                    }
+                    if ($intonly) {
+                        $html .= intOnly($rcVal, "$directorypath/$nameoftest");
+                    }
                 }
             }
         }
 
         return $html;
     }
+}
+
+function intOnly($rcVal, $nameoftest)
+{
+    global $intpath;
+    exec("python3 $intpath --source=$nameoftest.src --input=$nameoftest.in >./$nameoftest.tmpfileforretcheck", $output, $returned);
+    if ($returned == $rcVal) {
+        if ($returned == 0) {
+            exec("diff $nameoftest.out >./$nameoftest.tmpfileforretcheck", $output, $returnDIFF);
+            if ($returnDIFF == 0) {
+                return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
+            }
+            else {
+                return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
+            }
+        }
+        return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
+    }
+    return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
 }
 
 function parsesOnly($rcVal, $nameoftest)
@@ -120,7 +131,8 @@ function parsesOnly($rcVal, $nameoftest)
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
             }
             else{
-                #TODO AK NEBUDU XML ROVNAKE TAK ZELENA RETURN CODE CERVENA XML
+                return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">JEXAMXML: FAILED</td></tr></tbody></table>";
+
             }
         }
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
@@ -130,7 +142,7 @@ function parsesOnly($rcVal, $nameoftest)
 
 }
 
-function checkIfRcExists($nameoftest, $files, $directorypath, $end, $data)
+function checkIfRcExists($nameoftest, $directorypath, $end, $data)
 {
     $path = "$directorypath/$nameoftest.$end";
     if (!file_exists("$path")){
@@ -193,6 +205,7 @@ function isValidArgs()
             $counters[6] += 1;
             $jexamxml = explode('=', $arg)[1];
         } else {
+            fwrite(STDERR, "Neznamy argument!\n");
             #TODO ERROR CODE PRE NEZNAMY ARGUMENT
             exit(10);
         }
