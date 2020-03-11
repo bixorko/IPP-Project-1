@@ -6,6 +6,8 @@
 #                                               #
 #################################################
 
+//globalne premenne + rozsirenie
+
 $ordercount = 1;
 $comments = 0;
 $labels = 0;
@@ -14,6 +16,8 @@ $cliarguments = array("--loc", "--comments", "--labels", "--jumps");
 $filename = '';
 $rozsirenia = false;
 
+//rozparsovanie argumentov
+//vystup = naparsovane argumenty
 if ($argc != 1) {
     #1 argument
     if ($argc == 2) {
@@ -28,6 +32,7 @@ if ($argc != 1) {
         }
     } #2 a viac argumentov
     else {
+        //first kvoli ignorovaniu argv[0]
         $first = true;
         $rozsirenia = true;
         $isstats = 0;
@@ -55,6 +60,7 @@ if ($argc != 1) {
     }
 }
 
+//zadefinovanie regexov + jednotlivych instrukcii zoradenych podla poctu operandov
     $symbol_regex = '/^\s*((GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*)|(nil@nil)|(int@[+|-]?[0-9]+)|(bool@(true|false))|(string@\S*)\s*$/';
     $xw = xmlwriter_open_memory();
     xmlwriter_set_indent($xw, "  ");
@@ -65,6 +71,7 @@ if ($argc != 1) {
     $two_args = array("MOVE","INT2CHAR","READ","STRLEN","TYPE","NOT");
     $three_args = array("ADD","SUB","MUL","IDIV","LT","GT","EQ","AND","OR","STRI2INT","CONCAT","GETCHAR","SETCHAR","JUMPIFEQ","JUMPIFNEQ");
 
+    // hlavicka vystupneho XML programu
     xmlwriter_start_document($xw, '1.0', 'UTF-8');
     xmlwriter_start_element($xw, 'program');
     xmlwriter_start_attribute($xw, 'language');
@@ -77,6 +84,7 @@ if ($argc != 1) {
             $line = $line . "\n";
         }
 
+        //ak je riadok prazdny skip
         if ($line[0] == "\n"){
             continue;
         }
@@ -89,6 +97,7 @@ if ($argc != 1) {
                 continue;
             }
             else{
+                //regex pre korektny zaciatok suboru (este som nevedel ako sa to robi predtym tak je to trosku hlupe, ale funguje to :wesmart:)
                 if($firsttime){
                     if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $updated, $output_header)){
                         $firsttime = false;
@@ -97,12 +106,14 @@ if ($argc != 1) {
                     }
                 }else {
                     #XML
+                    //odkontrolovali sme hlavicku, ideme analyzovat dalsie riadky
                     syntaxAnalyze($updated, $xw);
                 }
             }
         }
         #XML
         else {
+            //rovnake ako pre elseif nad tymto len pocita s tym, ze v riadku nie je komentar - ak je odchyti ho elsif vyssie
             if($firsttime){
                 if(preg_match('/^\s*(.)(i|I)(p|P)(p|P)(c|C)(o|O)(d|D)(e|E)(2)(0)\s*$/', $line, $output_header)){
                     $firsttime = false;
@@ -116,6 +127,7 @@ if ($argc != 1) {
         }
     }
 
+    //ak boli zadane rozsirenia, do suboru zadaneho v parametri --stats vpiseme jednotlive statistiky
     if ($rozsirenia){
         $statsfile = fopen($filename, "w");
         foreach ($givenargs as $stat){
@@ -139,6 +151,7 @@ if ($argc != 1) {
         fclose($statsfile);
     }
 
+    //output pre XML
     xmlwriter_end_element($xw);
     echo xmlwriter_output_memory($xw);
 
@@ -160,6 +173,7 @@ function syntaxAnalyze($string, $xw)
     global $two_args;
     global $three_args;
 
+    // tu rozhodneme kam mame skoncit podla poctu operandov instrukcie
     if (sizeof($edited) === 2){
         zeroArgs($edited, $zero_args, $xw);
     }
@@ -179,6 +193,8 @@ function syntaxAnalyze($string, $xw)
 
 function checkIfBadCountArgs($string, $firstCnt, $secondCnt, $thirdCnt)
 {
+    //funkcia pre kontrolu spravnosti poctu argumentov
+    //aby sa vracal spravny errorcode
     foreach ($firstCnt as $a){
         if (strcmp($string[0], $a) == 0){
             exit(23);
@@ -204,6 +220,7 @@ function checkIfBadCountArgs($string, $firstCnt, $secondCnt, $thirdCnt)
 
 function zeroArgs($string, $argsArZero, $xw)
 {
+    //0 operandov + rozsirenie pre kalkulaciu returnu
     global $ordercount;
     $wastherematch = false;
 
@@ -244,6 +261,7 @@ function zeroArgs($string, $argsArZero, $xw)
 
 function oneArgs($string, $argsArOne, $xw)
 {
+    //funkcia pre jeden operand -> musime zacat kontrolvat regexy!
     global $ordercount;
     global $labels, $jumps;
     $wastherematch = false;
@@ -256,7 +274,7 @@ function oneArgs($string, $argsArOne, $xw)
     checkIfBadCountArgs($string, $zero_args, $two_args, $three_args);
 
     foreach($argsArOne as $a) {
-        if (strtoupper($string[0]) == "DEFVAR") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        if (strtoupper($string[0]) == "DEFVAR") {
             if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)) {
                 //TU BUDE REGEX PRE DEFVAR LF TF GF @ xxx a takto pokracovat aj pre LABEL a vsetky ostatne veci... odkontrolovat a ideme dalej
                 helpForOneArgsXML($a, $xw, $string, 'var');
@@ -268,7 +286,7 @@ function oneArgs($string, $argsArOne, $xw)
             }
         }
 
-        elseif (strtoupper($string[0]) == "LABEL" || strtoupper($a) == "CALL") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        elseif (strtoupper($string[0]) == "LABEL" || strtoupper($a) == "CALL") {
             if (strtoupper($string[0]) == "LABEL"){
                 $labels += 1;
             }else{
@@ -284,7 +302,7 @@ function oneArgs($string, $argsArOne, $xw)
             }
         }
 
-        else if (strtoupper($string[0]) == "WRITE") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        else if (strtoupper($string[0]) == "WRITE") {
             if(preg_match($symbol_regex, $string[1], $output_array)) {
                 declareWhichXML($a, $xw, $string);
                 $wastherematch = true;
@@ -294,7 +312,7 @@ function oneArgs($string, $argsArOne, $xw)
             }
         }
 
-        elseif (strtoupper($string[0]) == "PUSHS") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        elseif (strtoupper($string[0]) == "PUSHS") {
             if(preg_match($symbol_regex, $string[1], $output_array)) {
                 declareWhichXML($a, $xw, $string);
                 $wastherematch = true;
@@ -304,7 +322,7 @@ function oneArgs($string, $argsArOne, $xw)
             }
         }
 
-        elseif (strtoupper($string[0]) == "POPS") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        elseif (strtoupper($string[0]) == "POPS") {
             if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                 helpForOneArgsXML($a, $xw, $string, 'var');
             }
@@ -315,7 +333,7 @@ function oneArgs($string, $argsArOne, $xw)
             return;
         }
 
-        elseif (strtoupper($string[0]) == "JUMP") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        elseif (strtoupper($string[0]) == "JUMP") {
             $jumps += 1;
             if (preg_match('/^\s*[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                 helpForOneArgsXML($a, $xw, $string, 'label');
@@ -327,7 +345,8 @@ function oneArgs($string, $argsArOne, $xw)
             return;
         }
 
-        elseif (strtoupper($string[0]) == "EXIT") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        //exit ma specialnejsi regex, nestaci len var
+        elseif (strtoupper($string[0]) == "EXIT") {
             if (preg_match($symbol_regex, $string[1], $output_array)){
                 if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
                     helpForOneArgsXML($a, $xw, $string, 'var');
@@ -360,7 +379,7 @@ function oneArgs($string, $argsArOne, $xw)
             return;
         }
 
-        elseif (strtoupper($string[0]) == "DPRINT") { //upravit tak aby to kontrolovalo uz specificke nazvy a to iste aj v twoArgs a threeArgs
+        elseif (strtoupper($string[0]) == "DPRINT") {
             if(preg_match($symbol_regex, $string[1], $output_array)) {
                 declareWhichXML($a, $xw, $string);
                 $wastherematch = true;
@@ -377,7 +396,7 @@ function oneArgs($string, $argsArOne, $xw)
 
 function declareWhichXML($a, $xw, $string)
 {
-
+    //pomocna funkcia pre operacie s 1 operandom
     if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[1], $output_array)){
         helpForOneArgsXML($a, $xw, $string, 'var');
     }
@@ -403,6 +422,7 @@ function declareWhichXML($a, $xw, $string)
     }
 }
 
+    //generovanie XML pre operacie s 1 operandom
 function helpForOneArgsXML($a, $xw, $string, $whattype)
 {
     global $ordercount;
@@ -429,6 +449,7 @@ function helpForOneArgsXML($a, $xw, $string, $whattype)
 #                                               #
 #################################################
 
+//rovnaka funkcia ako predtym ale pre operacie s 2 operandmi
 function declareWhichXML2($a, $xw, $string, $firsttype)
 {
     if (preg_match('/^\s*(GF|LF|TF)@[a-zA-Z\-_$&%*!?][a-zA-Z0-9\-_$&%*!?]*\s*$/', $string[2], $output_array)){
@@ -455,6 +476,7 @@ function declareWhichXML2($a, $xw, $string, $firsttype)
     }
 }
 
+// -||-
 function helpForTwoArgsXML($a, $xw, $string, $whattype1, $whattype2)
 {
     global $ordercount;
