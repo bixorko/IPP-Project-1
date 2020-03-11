@@ -15,6 +15,7 @@ $jumps = 0;
 $cliarguments = array("--loc", "--comments", "--labels", "--jumps");
 $filename = '';
 $rozsirenia = false;
+$labelnames = array();
 
 //rozparsovanie argumentov
 //vystup = naparsovane argumenty
@@ -266,6 +267,7 @@ function oneArgs($string, $argsArOne, $xw)
     global $labels, $jumps;
     $wastherematch = false;
     global $symbol_regex;
+    global $labelnames;
 
     global $zero_args;
     global $one_args;
@@ -288,7 +290,10 @@ function oneArgs($string, $argsArOne, $xw)
 
         elseif (strtoupper($string[0]) == "LABEL" || strtoupper($a) == "CALL") {
             if (strtoupper($string[0]) == "LABEL"){
-                $labels += 1;
+                if (!in_array($string[1], $labelnames)) {
+                    array_push($labelnames, $string[1]);
+                    $labels += 1;
+                }
             }else{
                 $jumps += 1;
             }
