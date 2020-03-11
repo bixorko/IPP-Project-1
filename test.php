@@ -10,6 +10,10 @@ $intonly = false;
 $parsepathbool = false;
 $intpathbool = false;
 
+$tested = 0;
+$passed = 0;
+$failed = 0;
+
 $html = '';
 
 isValidArgs();
@@ -69,6 +73,9 @@ function findFilesSrc($directorypath, $recursive)
                 elseif ($intonly){
                     $html .= intOnly($rcVal, "$filepath/$nameoftest");
                 }
+                else{
+                    $html .= both($rcVal, "$filepath/$nameoftest");
+                }
             }
         }
 
@@ -88,8 +95,11 @@ function findFilesSrc($directorypath, $recursive)
                     if ($parseonly) {
                         $html .= parsesOnly($rcVal, "$directorypath/$nameoftest");
                     }
-                    if ($intonly) {
+                    elseif ($intonly) {
                         $html .= intOnly($rcVal, "$directorypath/$nameoftest");
+                    }
+                    else{
+                        $html .= both($rcVal, "$directorypath/$nameoftest");
                     }
                 }
             }
@@ -99,22 +109,66 @@ function findFilesSrc($directorypath, $recursive)
     }
 }
 
+function both($rcVal, $nameoftest)
+{
+    global $intpath;
+    global $parsepath;
+
+    global $passed, $failed, $tested;
+
+    exec("php $parsepath <$nameoftest.src >./$nameoftest.tmpfileforxmlcheck", $output, $returnPHP);
+    exec("python3 $intpath --source=./$nameoftest.tmpfileforxmlcheck --input=$nameoftest.in >./$nameoftest.tmpfileforretcheck", $output, $returnINT);
+
+    if ($returnINT == $rcVal){
+        if ($returnINT == 0){
+            exec("diff -w $nameoftest.out ./$nameoftest.tmpfileforretcheck", $output, $returnDIFF);
+            if ($returnDIFF == 0) {
+                $tested += 1;
+                $passed += 1;
+                return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
+            }
+            else {
+                $tested += 1;
+                $failed += 1;
+                return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
+            }
+        }
+        $tested += 1;
+        $passed += 1;
+        return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
+    }
+    $tested += 1;
+    $failed += 1;
+    return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returnINT EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
+}
+
 function intOnly($rcVal, $nameoftest)
 {
     global $intpath;
+
+    global $passed, $failed, $tested;
+
     exec("python3 $intpath --source=$nameoftest.src --input=$nameoftest.in >./$nameoftest.tmpfileforretcheck", $output, $returned);
     if ($returned == $rcVal) {
         if ($returned == 0) {
-            exec("diff $nameoftest.out >./$nameoftest.tmpfileforretcheck", $output, $returnDIFF);
+            exec("diff -w $nameoftest.out ./$nameoftest.tmpfileforretcheck", $output, $returnDIFF);
             if ($returnDIFF == 0) {
+                $tested += 1;
+                $passed += 1;
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
             }
             else {
+                $tested += 1;
+                $failed += 1;
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
             }
         }
+        $tested += 1;
+        $passed += 1;
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">DIFF: SUCCESS</td></tr></tbody></table>";
     }
+    $tested += 1;
+    $failed += 1;
     return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">DIFF: FAILED</td></tr></tbody></table>";
 }
 
@@ -123,23 +177,30 @@ function parsesOnly($rcVal, $nameoftest)
     global $parsepath;
     global $jexamxml;
 
+    global $passed, $failed, $tested;
+
     exec("php $parsepath <$nameoftest.src >./$nameoftest.tmpfileforxmlcheck", $output, $returned);
     if ($rcVal == $returned){
         if ($rcVal == 0) {
             exec("java -jar $jexamxml $nameoftest.out ./$nameoftest.tmpfileforxmlcheck diffs.xml /D jexamxml/options", $output, $returnXML);
             if ($returnXML == 0) {
+                $tested += 1;
+                $passed += 1;
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
             }
             else{
+                $tested += 1;
+                $failed += 1;
                 return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">JEXAMXML: FAILED</td></tr></tbody></table>";
-
             }
         }
+        $tested += 1;
+        $passed += 1;
         return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#00FF00\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#00FF00\">JEXAMXML: SUCCESS</td></tr></tbody></table>";
     }
-
+    $tested += 1;
+    $failed += 1;
     return "<table class=\"Table\"><tbody><tr><td>TEST: $nameoftest.src</td><td bgcolor=\"#FF0000\">GOT: $returned EXPECTED: $rcVal</td><td bgcolor=\"#FF0000\">JEXAMXML: FAILED</td></tr></tbody></table>";
-
 }
 
 function checkIfRcExists($nameoftest, $directorypath, $end, $data)
@@ -245,7 +306,7 @@ function printHelp()
 
 ?>
 
-<html>
+<html lang="cs">
     <style>
         table.Table {
             table-layout: fixed;
@@ -279,4 +340,72 @@ function printHelp()
         }
     </style>
     <?php echo $html; ?>
+
+    <table class="finalTable">
+        <thead>
+        <tr>
+            <th><b>TESTED:</b></th>
+            <th><p style="color:#3bff19">PASSED:</p></th>
+            <th><p style="color:#ff827f">FAILED:</p></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><b><?php echo $tested; ?></b></td>
+            <td><b><?php echo $passed; ?></b></td>
+            <td><b><?php echo $failed; ?></b></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <style>
+        table.finalTable {
+            border: 1px solid #1C6EA4;
+            background-color: #EEEEEE;
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
+        table.finalTable td, table.finalTable th {
+            border: 1px solid #AAAAAA;
+            padding: 3px 2px;
+        }
+        table.finalTable tbody td {
+            font-size: 13px;
+        }
+        table.finalTable tr:nth-child(even) {
+            background: #D0E4F5;
+        }
+        table.finalTable thead {
+            background: #1C6EA4;
+            background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            background: -webkit-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+            border-bottom: 2px solid #444444;
+        }
+        table.finalTable thead th {
+            font-size: 15px;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-align: center;
+            border-left: 2px solid #D0E4F5;
+        }
+        table.finalTable thead th:first-child {
+            border-left: none;
+        }
+
+        table.finalTable tfoot td {
+            font-size: 14px;
+        }
+        table.finalTable tfoot .links {
+            text-align: right;
+        }
+        table.finalTable tfoot .links a{
+            display: inline-block;
+            background: #1C6EA4;
+            color: #FFFFFF;
+            padding: 2px 8px;
+            border-radius: 5px;
+        }
+    </style>
 </html>
